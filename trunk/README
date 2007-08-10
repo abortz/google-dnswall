@@ -1,0 +1,24 @@
+dnswall is a daemon that filters DNS responses for private IP addresses. It is
+designed to be used in conjunction with an existing recursive DNS resolver in
+order to protect networks against DNS rebinding attacks.
+
+dnswall takes all its configuration on the command-line: the IP address and
+port to listen for incoming queries on, and the IP address and port to forward
+these queries to. It blocks responses that contain any dangerous IPv4 or IPv6
+addresses, including localhost, private ranges, and multicast.
+
+To use dnswall with an existing BIND resolver, run dnswall as:
+  dnswall -b 127.0.0.1 -B 5353 -f 127.0.0.1 -F 53
+and follow the comment instructions in contrib/named.conf.example-* to
+transform an existing named.conf into one that works with dnswall. Other DNS
+servers that support source IP-based responses should also work with a similar
+configuration.
+
+Otherwise, two servers will be required: one in front to answer all trusted
+subdomains and forward everything to dnswall, and a second server to answer all
+forwarded requests for external names. The second server can be outside the
+firewall (adding a measure of safety) and can easily be just an upstream
+recursive resolver (such as those provided by ISPs).
+
+See INSTALL for (generic) installation instructions: basically
+  ./configure && make && make install

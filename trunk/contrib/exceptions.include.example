@@ -1,0 +1,16 @@
+// Include an exception for every subdomain that is allowed to return private
+// IP addresses yet does not have authoritative data on this DNS server.
+
+// Begin exception list
+zone "sample-exception1" {
+	type forward;
+	forward only;
+	forwarders { localhost port 53; };
+};
+// End exception list
+
+// 'first' if fallback (dnswall not running) behavior is to keep going
+// 'only' if fallback is to stop resolving
+forward first;
+//forward only;
+forwarders { localhost port 5353; };
