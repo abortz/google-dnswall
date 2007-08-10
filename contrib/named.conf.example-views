@@ -1,0 +1,32 @@
+// Limitations: Queries from local machine will be susceptible to rebinding.
+// No views matching localhost can be used. 
+//
+// Make sure to modify the exceptions list in exceptions.include!
+
+options {
+	// Default behaviour.
+	// To forward to upstream resolvers:
+	// forward only; forwarders { ... };
+
+	// To recursively resolve locally:
+	// recursion yes;
+}
+
+view "dnswall-local" {
+	match-clients { localhost; }
+
+	// Insert moved forwards here.
+}
+
+// *** Insert regular configuration here. ***
+
+// For each view:
+// - Place 'include "exceptions.include";' at the very end.
+// - All forwards that can return untrusted names must by placed in the
+//   'dnswall-local' view, except forwards to localhost which cannot be placed
+//   in 'dnswall-local' and must be to port 5353
+//
+// If any of this is not possible, you must manually generate a
+// configuration to make untrusted queries go through dnswall.
+// Specifically, if non-local names (gotten by forward or recursive lookup)
+// CNAME to names in views then no luck.
