@@ -40,7 +40,7 @@ void skip_name(char** ptr, char* end) {
 
   do {
     if ((**ptr & 0xc0) == 0)
-      *ptr += **ptr + 1;
+      *ptr += (unsigned char)**ptr + 1;
     else {
       (*ptr)++;
       break;
@@ -241,6 +241,10 @@ int main(int argc, char** argv) {
     }
     // If the packet is a response, then check it for invalid records
     else {
+      // If it didn't come from the real forwarder, ignore it
+      if (addr.sin_addr.s_addr != dst_addr.sin_addr.s_addr)
+        continue;
+
       int valid = 1;
 
       // Start of the real payload
