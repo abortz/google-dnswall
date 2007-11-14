@@ -70,9 +70,11 @@ int read_int(char** ptr, char* end) {
 }
 
 /* Check if an IPv4 (A record) is valid (global) or not */
-int check_a(unsigned char* ptr, unsigned char* end) {
-  if (ptr + 4 > end)
+int check_a(char* sptr, char* end) {
+  if (sptr + 4 > end)
     return 0;
+
+  unsigned char* ptr = (unsigned char *)sptr;
 
   // Invalid
   if (ptr[0] == 0)
@@ -102,9 +104,11 @@ int check_a(unsigned char* ptr, unsigned char* end) {
 }
 
 /* Check if an IPv6 (AAAA record) is valid (global) or not */
-int check_aaaa(unsigned char* ptr, unsigned char* end) {
-  if (ptr + 16 > end)
+int check_aaaa(char* sptr, char* end) {
+  if (sptr + 16 > end)
     return 0;
+
+  unsigned char* ptr = (unsigned char*)sptr;
 
   if (ptr[0] == 0x00 && ptr[1] == 0x00 &&
       ptr[2] == 0x00 && ptr[3] == 0x00 &&
@@ -127,7 +131,7 @@ int check_aaaa(unsigned char* ptr, unsigned char* end) {
 
     // IPv4 mapped (check as if an IPv4 address)
     if (ptr[10] == 0xff && ptr[11] == 0xff)
-      return check_a(ptr + 12, end);
+      return check_a(sptr + 12, end);
   }
 
   // Globally unique local
