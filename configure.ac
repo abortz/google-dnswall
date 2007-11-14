@@ -5,7 +5,7 @@
 # make sure we're interpreted by some minimal autoconf
 AC_PREREQ(2.57)
 
-AC_INIT([dnswall], [0.1], [opensource@google.com])
+AC_INIT([dnswall], [0.1.4], [opensource@google.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/dnswall.c])
 AC_CONFIG_HEADER([config.h])
