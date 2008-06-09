@@ -1,6 +1,9 @@
 ## Process this file with autoconf to produce configure.
 ## In general, the safest way to proceed is to run the following:
 ##    % aclocal -I . -I `pwd`/../autoconf && autoheader && autoconf && automake
+##
+## The above line didn't work for me, but this one did:
+##  aclocal && autoheader && autoconf && automake --add-missing
 
 # make sure we're interpreted by some minimal autoconf
 AC_PREREQ(2.57)

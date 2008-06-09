@@ -138,8 +138,14 @@ int check_aaaa(char* sptr, char* end) {
   if ((ptr[0] >> 1) == (0xfc >> 1))
     return 0;
 
-  // Link-local
-  if (ptr[0] == 0xf0 && (ptr[1] >> 6) == (0x80 >> 6))
+  // Link-local: https://ietf.org/rfc/rfc3513.txt
+  if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0x80 >> 6))
+    return 0;
+
+  // Site-local: https://ietf.org/rfc/rfc3513.txt
+  // These addresses are deprecated, but we should still block them.
+  // For more information, see <https://ietf.org/rfc/rfc3879.txt>.
+  if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0xc0 >> 6))
     return 0;
 
   // Multicast
