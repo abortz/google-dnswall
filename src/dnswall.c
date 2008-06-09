@@ -97,7 +97,7 @@ int check_a(char* sptr, char* end) {
   // Multicast
   // (we are unable to determine the groups internal machines
   // belong to, so we have to block everything)
-  if (ptr[0] == 224)
+  if ((ptr[0] >> 4) == (224 >> 4))
     return 0;
 
   return 1;
