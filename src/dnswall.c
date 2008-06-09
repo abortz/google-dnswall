@@ -121,15 +121,23 @@ int check_aaaa(char* sptr, char* end) {
         ptr[14] == 0x00) {
 
       // Unspecified address
+      // Section 2.5.2 of https://ietf.org/rfc/rfc3513.txt
       if (ptr[15] == 0x00)
         return 0;
 
       // Loopback
+      // Section 2.5.3 of https://ietf.org/rfc/rfc3513.txt
       if (ptr[15] == 0x01)
         return 0;
     }
 
+    // IPv4 compatible (check as if an IPv4 address)
+    // Section 2.5.4 of https://ietf.org/rfc/rfc3513.txt
+    if (ptr[10] == 0x00 && ptr[11] == 0x00)
+      return check_a(sptr + 12, end);
+
     // IPv4 mapped (check as if an IPv4 address)
+    // Section 2.5.4 of https://ietf.org/rfc/rfc3513.txt
     if (ptr[10] == 0xff && ptr[11] == 0xff)
       return check_a(sptr + 12, end);
   }
@@ -138,17 +146,20 @@ int check_aaaa(char* sptr, char* end) {
   if ((ptr[0] >> 1) == (0xfc >> 1))
     return 0;
 
-  // Link-local: https://ietf.org/rfc/rfc3513.txt
+  // Link-local
+  // Section 2.5.6 of https://ietf.org/rfc/rfc3513.txt
   if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0x80 >> 6))
     return 0;
 
-  // Site-local: https://ietf.org/rfc/rfc3513.txt
+  // Site-local
+  // Section 2.5.6 of https://ietf.org/rfc/rfc3513.txt
   // These addresses are deprecated, but we should still block them.
   // For more information, see <https://ietf.org/rfc/rfc3879.txt>.
   if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0xc0 >> 6))
     return 0;
 
   // Multicast
+  // Section 2.7 of https://ietf.org/rfc/rfc3513.txt
   // (we are unable to determine the groups internal machines
   // belong to, so we have to block everything)
   if (ptr[0] == 0xff)
