@@ -3,7 +3,7 @@
 ##    % aclocal -I . -I `pwd`/../autoconf && autoheader && autoconf && automake
 ##
 ## The above line didn't work for me, but this one did:
-##  aclocal && autoheader && autoconf && automake --add-missing
+##  aclocal && libtoolize && autoheader && autoconf && automake --add-missing
 
 # make sure we're interpreted by some minimal autoconf
 AC_PREREQ(2.57)
@@ -15,6 +15,9 @@ AC_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
+AC_LANG([C++])
+AC_PROG_LIBTOOL
 
 # Checks for libraries.
 
@@ -28,5 +31,6 @@ AC_CHECK_HEADERS([arpa/inet.h netinet/in.h stdlib.h string.h strings.h sys/socke
 AC_CHECK_FUNCS([bzero socket])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 test/Makefile])
 AC_OUTPUT
