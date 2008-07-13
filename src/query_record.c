@@ -55,7 +55,7 @@ typedef struct {
 
 // A doubly-linked list of recently allocated QueryRecord ids.  The ids at the
 // front of the list were allocated more recently than the ids at the back of
-// the list.  The id |-1| is a placehodler ofr an invalid id.
+// the list.  The id |-1| is a placeholder for an invalid id.
 static AllocListNode alloc_list[NUMBER_OF_QUERY_RECORDS];
 
 // The first id in the alloc_list.
