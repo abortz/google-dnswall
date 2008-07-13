@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include "check_record.h"
+
 /* State of a pending query */
 struct query_record {
   // The query's original id field
@@ -67,105 +69,6 @@ int read_int(char** ptr, char* end) {
   int res = ntohl(*((int*)*ptr));
   *ptr += 4;
   return res;
-}
-
-/* Check if an IPv4 (A record) is valid (global) or not */
-int check_a(char* sptr, char* end) {
-  if (sptr + 4 > end)
-    return 0;
-
-  unsigned char* ptr = (unsigned char *)sptr;
-
-  // Invalid
-  if (ptr[0] == 0)
-    return 0;
-
-  // Node-local
-  if (ptr[0] == 127)
-    return 0;
-
-  // Link-local
-  if (ptr[0] == 169 && ptr[1] == 254)
-    return 0;
-
-  // Site-local
-  if (ptr[0] == 10 ||
-     (ptr[0] == 172 && (ptr[1] >> 4) == (16 >> 4)) ||
-     (ptr[0] == 192 && ptr[1] == 168))
-    return 0;
-
-  // Multicast
-  // (we are unable to determine the groups internal machines
-  // belong to, so we have to block everything)
-  if ((ptr[0] >> 4) == (224 >> 4))
-    return 0;
-
-  return 1;
-}
-
-/* Check if an IPv6 (AAAA record) is valid (global) or not */
-int check_aaaa(char* sptr, char* end) {
-  if (sptr + 16 > end)
-    return 0;
-
-  unsigned char* ptr = (unsigned char*)sptr;
-
-  if (ptr[0] == 0x00 && ptr[1] == 0x00 &&
-      ptr[2] == 0x00 && ptr[3] == 0x00 &&
-      ptr[4] == 0x00 && ptr[5] == 0x00 &&
-      ptr[6] == 0x00 && ptr[7] == 0x00 &&
-      ptr[8] == 0x00 && ptr[9] == 0x00) {
-
-    if (ptr[10] == 0x00 && ptr[11] == 0x00 &&
-        ptr[12] == 0x00 && ptr[13] == 0x00 &&
-        ptr[14] == 0x00) {
-
-      // Unspecified address
-      // Section 2.5.2 of https://ietf.org/rfc/rfc3513.txt
-      if (ptr[15] == 0x00)
-        return 0;
-
-      // Loopback
-      // Section 2.5.3 of https://ietf.org/rfc/rfc3513.txt
-      if (ptr[15] == 0x01)
-        return 0;
-    }
-
-    // IPv4 compatible (check as if an IPv4 address)
-    // Section 2.5.4 of https://ietf.org/rfc/rfc3513.txt
-    if (ptr[10] == 0x00 && ptr[11] == 0x00)
-      return check_a(sptr + 12, end);
-
-    // IPv4 mapped (check as if an IPv4 address)
-    // Section 2.5.4 of https://ietf.org/rfc/rfc3513.txt
-    if (ptr[10] == 0xff && ptr[11] == 0xff)
-      return check_a(sptr + 12, end);
-  }
-
-  // Globally unique local
-  if ((ptr[0] >> 1) == (0xfc >> 1))
-    return 0;
-
-  // Link-local
-  // Section 2.5.6 of https://ietf.org/rfc/rfc3513.txt
-  if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0x80 >> 6))
-    return 0;
-
-  // Site-local
-  // Section 2.5.6 of https://ietf.org/rfc/rfc3513.txt
-  // These addresses are deprecated, but we should still block them.
-  // For more information, see <https://ietf.org/rfc/rfc3879.txt>.
-  if (ptr[0] == 0xfe && (ptr[1] >> 6) == (0xc0 >> 6))
-    return 0;
-
-  // Multicast
-  // Section 2.7 of https://ietf.org/rfc/rfc3513.txt
-  // (we are unable to determine the groups internal machines
-  // belong to, so we have to block everything)
-  if (ptr[0] == 0xff)
-    return 0;
-
-  return 1;
 }
 
 void usage() {
@@ -293,13 +196,13 @@ int main(int argc, char** argv) {
         int rlen = read_short(&ptr, msg + len);
         // If its an A record, check it for private IPs
         if (class == 1 && type == 1) {
-          if (check_a(ptr, msg + len) == 0)
+          if (CheckARecord(ptr, msg + len) == 0)
             valid = 0;
         }
         
         // If its an AAAA record, check it for private IPs
         if (class == 1 && type == 28) {
-          if (check_aaaa(ptr, msg + len) == 0)
+          if (CheckAAAARecord(ptr, msg + len) == 0)
             valid = 0;
         }
         ptr += rlen;
