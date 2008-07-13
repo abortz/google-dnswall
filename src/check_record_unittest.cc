@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-#include "check_record.c"
+extern "C" {
+#include "check_record.h"
+}
 
 #include <gtest/gtest.h>
 
