@@ -51,3 +51,8 @@ TEST(CheckATest, PublicIP) {
   EXPECT_TRUE(CheckARecord(public_ip.sptr(), public_ip.end()));
 }
 
+TEST(CheckATest, PrivateIP) {
+  MockARecord public_ip(192, 168, 1, 100);
+  EXPECT_FALSE(CheckARecord(public_ip.sptr(), public_ip.end()));
+}
+
