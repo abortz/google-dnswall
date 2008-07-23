@@ -23,16 +23,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include "query_record.h"
 #include "check_record.h"
-
-/* State of a pending query */
-struct query_record {
-  // The query's original id field
-  int old_id;
-
-  // The query's original source
-  struct sockaddr_in src_addr;
-};
 
 /* Read in a NAME field, but discard the result (saves having to parse
  * compressed labels */
@@ -130,9 +122,7 @@ int main(int argc, char** argv) {
   dst_addr.sin_addr.s_addr = inet_addr(forward_addr);
   dst_addr.sin_port = htons(forward_port);
 
-  // Initialize the table of pending queries
-  struct query_record querys[65536];
-  int current_query = 0;
+  InitQueryRecordHeap();
 
   char msg[1024];
   while (1) {
@@ -147,16 +137,13 @@ int main(int argc, char** argv) {
 
     // If the packet is a query, then proxy (almost) without change
     if ((*((short *)&msg[2]) & 0x8000) == 0) {
+      QueryRecord* record = AllocQueryRecord();
       // Record the old id and source address
-      querys[current_query].old_id = ntohs(*((short*)&msg[0]));
-      querys[current_query].src_addr = addr;
+      record->old_id = ntohs(*((short*)&msg[0]));
+      record->src_addr = addr;
 
       // Replace the id with our own query identifier
-      *((short *)&msg[0]) = htons(current_query);
-
-      current_query++;
-      if (current_query >= 65536)
-        current_query = 0;
+      *((short *)&msg[0]) = htons(record->id);
 
       // Send!
       sendto(sock, msg, len, 0,
@@ -167,6 +154,14 @@ int main(int argc, char** argv) {
     else {
       // If it didn't come from the real forwarder, ignore it
       if (addr.sin_addr.s_addr != dst_addr.sin_addr.s_addr)
+        continue;
+
+      // Extract our query identifier from the packet
+      int id = ntohs(*((short *)&msg[0]));
+      QueryRecord* record = GetQueryRecordById(id);
+
+      // Validate that this query id is currently in flight.
+      if (!record)
         continue;
 
       int valid = 1;
@@ -244,16 +239,15 @@ int main(int argc, char** argv) {
         len = end - msg;
       }
 
-      // Extract our query identifier from the packet
-      int query = ntohs(*((short *)&msg[0]));
-
       // Put back the original id
-      *((short *)&msg[0]) = htons(querys[query].old_id);
+      *((short *)&msg[0]) = htons(record->old_id);
 
       // Send!
       sendto(sock, msg, len, 0,
-             (struct sockaddr *)&querys[query].src_addr,
-             sizeof(querys[query].src_addr));
+             (struct sockaddr *)&record->src_addr,
+             sizeof(record->src_addr));
+
+      FreeQueryRecord(record);
     }
   }
 }
