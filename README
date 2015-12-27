@@ -1,3 +1,6 @@
+(Note: As of October 2011 this feature is present in most recursive resolvers.
+This project is now archived and is left as a record.)
+
 dnswall is a daemon that filters DNS responses for private IP addresses. It is
 designed to be used in conjunction with an existing recursive DNS resolver in
 order to protect networks against DNS rebinding attacks.
